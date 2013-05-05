@@ -180,13 +180,14 @@ flush_one_key({Key, Tab}, Acc) ->
     Acc.
 
 sum_one_tab(Tab) ->
+    Min0 = ets:first(Tab),
     F = fun({X}, {Sum, Min, Max}) ->
                 NewSum = Sum + X,
                 NewMin = erlang:min(Min, X),
                 NewMax = erlang:max(Max, X),
                 {NewSum, NewMin, NewMax}
         end,
-    ets:foldl(F, {0, 0, 0}, Tab).
+    ets:foldl(F, {0, Min0, 0}, Tab).
 
 get_average(0, _) ->
     infinity;
