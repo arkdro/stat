@@ -192,7 +192,7 @@ sum_one_tab(_, Tab) ->
     ets:foldl(F, {0, Min0, 0}, Tab).
 
 get_average(0, _) ->
-    infinity;
+    undefined;
 get_average(Size, Sum) ->
     Sum / Size.
 
