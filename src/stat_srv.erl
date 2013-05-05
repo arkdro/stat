@@ -23,7 +23,7 @@
          terminate/2, code_change/3]).
 
 -define(SERVER, ?MODULE). 
--define(INTERVAL, 1000).
+-define(INTERVAL, 60 * 1000).
 
 -record(state, {
           rel %% ets that contains correspondence between tags and ets tables
