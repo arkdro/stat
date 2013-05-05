@@ -167,7 +167,7 @@ flush_stat(#state{rel=Rel}) ->
 
 flush_one_key({Key, Tab}, Acc) ->
     Size = ets:info(Tab, size),
-    {Sum, Min, Max} = sum_one_tab(Tab),
+    {Sum, Min, Max} = sum_one_tab(Size, Tab),
     Avg = get_average(Size, Sum),
     Props = [{tab, Key},
              {size, Size},
@@ -179,7 +179,9 @@ flush_one_key({Key, Tab}, Acc) ->
     ets:delete_all_objects(Tab),
     Acc.
 
-sum_one_tab(Tab) ->
+sum_one_tab(0, Tab) ->
+    {undefined, undefined, undefined};
+sum_one_tab(_, Tab) ->
     Min0 = ets:first(Tab),
     F = fun({X}, {Sum, Min, Max}) ->
                 NewSum = Sum + X,
