@@ -179,7 +179,7 @@ flush_one_key({Key, Tab}, Acc) ->
     ets:delete_all_objects(Tab),
     Acc.
 
-sum_one_tab(0, Tab) ->
+sum_one_tab(0, _) ->
     {undefined, undefined, undefined};
 sum_one_tab(_, Tab) ->
     Min0 = ets:first(Tab),
