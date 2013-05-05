@@ -23,6 +23,7 @@
          terminate/2, code_change/3]).
 
 -define(SERVER, ?MODULE). 
+-define(INTERVAL, 1000).
 
 -record(state, {
           rel %% ets that contains correspondence between tags and ets tables
@@ -62,6 +63,7 @@ start_link() ->
 %%--------------------------------------------------------------------
 init([]) ->
     Rel = ets:new(?MODULE, []),
+    erlang:send_after(?INTERVAL, self(), flush),
     {ok, #state{rel=Rel}}.
 
 %%--------------------------------------------------------------------
@@ -109,6 +111,11 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info(flush, State) ->
+    flush_stat(State),
+    erlang:send_after(?INTERVAL, self(), flush),
+    {noreply, State};
+
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -154,4 +161,30 @@ ensure_table(Rel, Key) ->
             ets:insert(Rel, {Key, Tab}),
             Tab
     end.
+
+flush_stat(#state{rel=Rel}) ->
+    ets:foldl(fun flush_one_key/2, true, Rel).
+
+flush_one_key({Key, Tab}, Acc) ->
+    Size = ets:info(Tab, size),
+    Sum = sum_one_tab(Tab),
+    Avg = get_average(Size, Sum),
+    Props = [{tab, Key},
+             {size, Size},
+             {sum, Sum},
+             {avg, Avg}],
+    error_logger:info_report({flush_tab, Props}),
+    ets:delete_all_objects(Tab),
+    Acc.
+
+sum_one_tab(Tab) ->
+    F = fun({X}, Acc) ->
+                Acc + X
+        end,
+    ets:foldl(F, 0, Tab).
+
+get_average(0, _) ->
+    infinity;
+get_average(Size, Sum) ->
+    Sum / Size.
 
