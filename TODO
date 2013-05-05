@@ -1,1 +1,3 @@
 - do the stat calculation in a separate process
+- median, percentiles (90 or 95)
+- individual flush timer for every key
