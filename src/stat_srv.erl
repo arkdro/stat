@@ -167,10 +167,12 @@ flush_stat(#state{rel=Rel}) ->
 
 flush_one_key({Key, Tab}, Acc) ->
     Size = ets:info(Tab, size),
-    Sum = sum_one_tab(Tab),
+    {Sum, Min, Max} = sum_one_tab(Tab),
     Avg = get_average(Size, Sum),
     Props = [{tab, Key},
              {size, Size},
+             {min, Min},
+             {max, Max},
              {sum, Sum},
              {avg, Avg}],
     error_logger:info_report({flush_tab, Props}),
@@ -178,10 +180,13 @@ flush_one_key({Key, Tab}, Acc) ->
     Acc.
 
 sum_one_tab(Tab) ->
-    F = fun({X}, Acc) ->
-                Acc + X
+    F = fun({X}, {Sum, Min, Max}) ->
+                NewSum = Sum + X,
+                NewMin = erlang:min(Min, X),
+                NewMax = erlang:max(Max, X),
+                {NewSum, NewMin, NewMax}
         end,
-    ets:foldl(F, 0, Tab).
+    ets:foldl(F, {0, 0, 0}, Tab).
 
 get_average(0, _) ->
     infinity;
