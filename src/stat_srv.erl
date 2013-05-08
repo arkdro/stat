@@ -209,12 +209,13 @@ get_median(Data) ->
     get_percentile(50, Data).
 
 get_percentile(Perc, {Size, Sorted}) ->
-    %% do not bother exact math
-    Num = Size * Perc / 100,
+    %% do not bother with exact math
+    Num = round(Size * Perc / 100 + 0.5),
     lists:nth(Num, Sorted).
 
 get_data(Tab) ->
-    Sorted = lists:sort(ets:tab2list(Tab)),
+    L = [X || {X} <- ets:tab2list(Tab)],
+    Sorted = lists:sort(L),
     Size = ets:info(Tab, size),
     {Size, Sorted}.
 
