@@ -169,13 +169,15 @@ flush_one_key({Key, Tab}, Acc) ->
     Size = ets:info(Tab, size),
     {Sum, Min, Max} = sum_one_tab(Size, Tab),
     Avg = get_average(Size, Sum),
-    {Med, Pct90} = get_percentiles(Tab),
+    {Med, Perc25, Perc75, Perc90} = get_percentiles(Tab),
     Props = [{tab, Key},
              {size, Size},
              {min, Min},
              {max, Max},
+             {pct25, Perc25},
              {med, Med},
-             {pct90, Pct90},
+             {pct75, Perc75},
+             {pct90, Perc90},
              {sum, Sum},
              {avg, Avg}],
     error_logger:info_report({flush_tab, Props}),
@@ -202,8 +204,10 @@ get_average(Size, Sum) ->
 get_percentiles(Tab) ->
     Data = get_data(Tab),
     Med = get_median(Data),
+    Perc25 = get_percentile(25, Data),
+    Perc75 = get_percentile(75, Data),
     Perc90 = get_percentile(90, Data),
-    {Med, Perc90}.
+    {Med, Perc25, Perc75, Perc90}.
 
 get_median(Data) ->
     get_percentile(50, Data).
