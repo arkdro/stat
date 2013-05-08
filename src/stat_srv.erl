@@ -169,10 +169,13 @@ flush_one_key({Key, Tab}, Acc) ->
     Size = ets:info(Tab, size),
     {Sum, Min, Max} = sum_one_tab(Size, Tab),
     Avg = get_average(Size, Sum),
+    {Med, Pct90} = get_percentiles(Tab),
     Props = [{tab, Key},
              {size, Size},
              {min, Min},
              {max, Max},
+             {med, Med},
+             {pct90, Pct90},
              {sum, Sum},
              {avg, Avg}],
     error_logger:info_report({flush_tab, Props}),
@@ -195,4 +198,23 @@ get_average(0, _) ->
     undefined;
 get_average(Size, Sum) ->
     Sum / Size.
+
+get_percentiles(Tab) ->
+    Data = get_data(Tab),
+    Med = get_median(Data),
+    Perc90 = get_percentile(90, Data),
+    {Med, Perc90}.
+
+get_median(Data) ->
+    get_percentile(50, Data).
+
+get_percentile(Perc, {Size, Sorted}) ->
+    %% do not bother exact math
+    Num = Size * Perc / 100,
+    lists:nth(Num, Sorted).
+
+get_data(Tab) ->
+    Sorted = lists:sort(ets:tab2list(Tab)),
+    Size = ets:info(Tab, size),
+    {Size, Sorted}.
 
