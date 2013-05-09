@@ -57,36 +57,39 @@ get_numbers(Tab) ->
 
 collect_numbers({Size, Sorted}) ->
     Min = get_min(Sorted),
+    InitSum = init_sum(Sorted),
     Idx = get_percentile_indices(Size),
-    Res = collect_numbers(0, Sorted, Idx, #acc{size=Size, min=Min}),
+    Res = collect_numbers(1, Sorted, Idx, dict:new(),
+                          #acc{size=Size, min=Min, sum=InitSum}),
     Avg = get_average(Size, Res#acc.sum),
     Res#acc{avg=Avg}.
 
-collect_numbers(_I, [], Idx, Res) ->
-    move_percentiles(Idx, Res);
-collect_numbers(I, [H|T], PercIdx, #acc{sum=Sum} = Acc) ->
-    NewPercIdx = fill_percentile(I, H, PercIdx),
+collect_numbers(_I, [], Idx, Perc, Res) ->
+    move_percentiles(Perc, Res);
+collect_numbers(I, [H|T], Idx, PercAcc, #acc{sum=Sum} = Acc) ->
+    {NewPercIdx, NewPercAcc} = fill_percentile(I, H, Idx, PercAcc),
     NewAcc = Acc#acc{max=H, sum=Sum+H},
-    collect_numbers(I+1, T, NewPercIdx, NewAcc).
+    collect_numbers(I+1, T, NewPercIdx, NewPercAcc, NewAcc).
 
-move_percentiles({_, Idx}, Res) ->
+move_percentiles(Idx, Res) ->
     L = dict:to_list(Idx),
     Res#acc{perc=lists:sort(L)}.
 
-fill_percentile(_I, _Val, {[], _Idx} = PercIdx) ->
-    PercIdx;
-fill_percentile(I, Val, {[H | T], IdxData}) when I =< H ->
+fill_percentile(_I, _Val, {[], []}, PercAcc) ->
+    {{[], []}, PercAcc};
+fill_percentile(I, Val, {[H | T] = IdxPercList, [H2 | T2] = IdxList}, IdxData) when I =< H2 ->
     NewData = dict:store(H, Val, IdxData),
-    {T, NewData};
-fill_percentile(_, _, PercIdx) ->
-    PercIdx.
+    {{IdxPercList, IdxList}, NewData};
+fill_percentile(I, Val, {[H | T], [H2 | T2]}, IdxData) ->
+    fill_percentile(I, Val, {T, T2}, IdxData).
 
 get_percentile_indices(Size) ->
-    F = fun(X, Acc) ->
-                Idx = round(Size * X / 100 + 0.5),
-                dict:store(X, Idx, Acc)
-                end,
-    {?PERCENTILES, lists:foldl(F, dict:new(), ?PERCENTILES)}.
+    {?PERCENTILES, [round(Size * X / 100 + 0.5) || X <- ?PERCENTILES]}.
+
+init_sum([]) ->
+    undefined;
+init_sum(_) ->
+    0.
 
 get_min([]) ->
     undefined;
