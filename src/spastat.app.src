@@ -6,5 +6,5 @@
   {applications, [kernel,
                   stdlib,
                   sasl]},
-  {mod, {stat_app,[]}}
+  {mod, {spastat_app,[]}}
  ]}.

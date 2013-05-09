@@ -109,7 +109,7 @@ handle_cast(_Msg, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_info({'ETS-TRANSFER', Tab, _FromPid, {flush, Key, Tab}}, State) ->
-    stat_flush_util:flush_tab(Key, Tab),
+    spastat_flush_util:flush_tab(Key, Tab),
     {noreply, State};
 
 handle_info(_Info, State) ->

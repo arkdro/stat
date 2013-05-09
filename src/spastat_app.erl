@@ -34,7 +34,7 @@
 %% @end
 %%--------------------------------------------------------------------
 start(_StartType, _StartArgs) ->
-    case stat_sup:start_link() of
+    case spastat_sup:start_link() of
         {ok, Pid} ->
             {ok, Pid};
         Error ->

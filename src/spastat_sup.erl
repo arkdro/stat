@@ -60,11 +60,11 @@ init([]) ->
     Shutdown = brutal_kill,
     Type = worker,
 
-    AChild = {stat_srv, {stat_srv, start_link, []},
-              Restart, Shutdown, Type, [stat_srv]},
+    AChild = {spastat_srv, {spastat_srv, start_link, []},
+              Restart, Shutdown, Type, [spastat_srv]},
 
-    Flusher = {stat_flusher, {stat_flusher, start_link, []},
-               Restart, Shutdown, Type, [stat_flusher]},
+    Flusher = {spastat_flusher, {spastat_flusher, start_link, []},
+               Restart, Shutdown, Type, [spastat_flusher]},
 
     {ok, {SupFlags, [Flusher, AChild]}}.
 
