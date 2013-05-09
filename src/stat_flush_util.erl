@@ -61,39 +61,29 @@ get_numbers(Tab) ->
 
 collect_numbers({Size, Sorted}) ->
     Min = get_min(Sorted),
-    InitSum = init_sum(Sorted),
-    Idx = get_percentile_indices(Size),
-    Res = collect_numbers(1, Sorted, Idx, dict:new(),
-                          #acc{size=Size, min=Min, sum=InitSum}),
-    Avg = get_average(Size, Res#acc.sum),
-    Res#acc{avg=Avg}.
+    Max = get_max(Sorted),
+    Sum = lists:foldl(fun(X, Acc) -> X + Acc end, 0, Sorted),
+    P = [{X, get_percentile(Size, Sorted, X)} || X <- ?PERCENTILES],
+    Avg = get_average(Size, Sum),
+    #acc{
+          size = Size,
+          avg = Avg,
+          min = Min,
+          max = Max,
+          sum = Sum,
+          perc = P
+        }.
 
-collect_numbers(_I, [], Idx, Perc, Res) ->
-    move_percentiles(Perc, Res);
-collect_numbers(I, [H|T], Idx, PercAcc, #acc{sum=Sum} = Acc) ->
-    {NewPercIdx, NewPercAcc} = fill_percentile(I, H, Idx, PercAcc),
-    NewAcc = Acc#acc{max=H, sum=Sum+H},
-    collect_numbers(I+1, T, NewPercIdx, NewPercAcc, NewAcc).
-
-move_percentiles(Idx, Res) ->
-    L = dict:to_list(Idx),
-    Res#acc{perc=lists:sort(L)}.
-
-fill_percentile(_I, _Val, {[], []}, PercAcc) ->
-    {{[], []}, PercAcc};
-fill_percentile(I, Val, {[H | T] = IdxPercList, [H2 | T2] = IdxList}, IdxData) when I =< H2 ->
-    NewData = dict:store(H, Val, IdxData),
-    {{IdxPercList, IdxList}, NewData};
-fill_percentile(I, Val, {[H | T], [H2 | T2]}, IdxData) ->
-    fill_percentile(I, Val, {T, T2}, IdxData).
-
-get_percentile_indices(Size) ->
-    {?PERCENTILES, [round(Size * X / 100 + 0.5) || X <- ?PERCENTILES]}.
-
-init_sum([]) ->
+get_percentile(0, _, _) ->
     undefined;
-init_sum(_) ->
-    0.
+get_percentile(Size, List, Perc) ->
+    N = round(Size * Perc / 100 + 0.5),
+    lists:nth(N, List).
+
+get_max([]) ->
+    undefined;
+get_max(Sorted) ->
+    lists:last(Sorted).
 
 get_min([]) ->
     undefined;
