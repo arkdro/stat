@@ -63,7 +63,10 @@ init([]) ->
     AChild = {stat_srv, {stat_srv, start_link, []},
               Restart, Shutdown, Type, [stat_srv]},
 
-    {ok, {SupFlags, [AChild]}}.
+    Flusher = {stat_flusher, {stat_flusher, start_link, []},
+               Restart, Shutdown, Type, [stat_flusher]},
+
+    {ok, {SupFlags, [Flusher, AChild]}}.
 
 %%%===================================================================
 %%% Internal functions
