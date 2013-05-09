@@ -212,6 +212,8 @@ get_percentiles(Tab) ->
 get_median(Data) ->
     get_percentile(50, Data).
 
+get_percentile(Perc, {Size, []}) ->
+    undefined;
 get_percentile(Perc, {Size, Sorted}) ->
     %% do not bother with exact math
     Num = round(Size * Perc / 100 + 0.5),
