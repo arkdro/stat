@@ -2,7 +2,7 @@
 
 %% API for stat_srv
 -export([
-         gauge/2,
+         gauge/2
         ]).
 
 -define(SERVER, stat_srv).
