@@ -32,7 +32,7 @@
 %%% API
 %%%===================================================================
 
--spec flush_tab(term(), non_neg_integer()) -> true.
+-spec flush_tab(term(), atom() | non_neg_integer()) -> true.
 
 flush_tab(Key, Tab) ->
     Res = get_numbers(Tab),
