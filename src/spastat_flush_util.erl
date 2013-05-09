@@ -46,7 +46,7 @@ flush_tab(Key, Tab) ->
 
 create_result(Key, Res) ->
     Tags = record_info(fields, acc),
-    Data = tuple_to_list(Res),
+    [_ | Data] = tuple_to_list(Res),
     Props = lists:zip(Tags, Data),
     [{key, Key} | Props].
 
