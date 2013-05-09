@@ -8,7 +8,7 @@
 %%% @end
 %%% Created :  5 May 2013 by  <arkdro@gmail.com>
 %%%-------------------------------------------------------------------
--module(stat_srv).
+-module(spastat_srv).
 
 -behaviour(gen_server).
 

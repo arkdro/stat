@@ -6,7 +6,7 @@
 %%% @end
 %%% Created :  9 May 2013 by  <arkdro@gmail.com>
 %%%-------------------------------------------------------------------
--module(stat_flush_util).
+-module(spastat_flush_util).
 
 %% API
 -export([

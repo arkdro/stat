@@ -6,7 +6,7 @@
 %%% @end
 %%% Created :  6 May 2013 by  <arkdro@gmail.com>
 %%%-------------------------------------------------------------------
--module(stat_app).
+-module(spastat_app).
 
 -behaviour(application).
 

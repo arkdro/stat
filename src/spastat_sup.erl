@@ -6,7 +6,7 @@
 %%% @end
 %%% Created :  6 May 2013 by  <arkdro@gmail.com>
 %%%-------------------------------------------------------------------
--module(stat_sup).
+-module(spastat_sup).
 
 -behaviour(supervisor).
 
