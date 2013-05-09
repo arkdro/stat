@@ -107,41 +107,11 @@ util_test_() ->
       [
        ?_test(
           begin
-              Act = get_percentile_indices(20),
-              ?assertMatch({[25,50,75,90,98], [6,11,16,19,20]}, Act)
-          end),
-       ?_test(
-          begin
               ?assertMatch(1, get_min([1,2,5,61]))
           end),
        ?_test(
           begin
-              ?assertMatch({{[], []}, stub}, fill_percentile(1, 2, {[], []}, stub))
-          end),
-       ?_test(
-          begin
-              {{[15], [425]}, Act} = fill_percentile(425, v2, {[15], [425]}, dict:new()),
-              ActL = dict:to_list(Act),
-              ?assertMatch([{15, v2}], ActL)
-          end),
-       ?_test(
-          begin
-              {{[50], [10]}, Act} = fill_percentile(6, v2, {[25, 50], [5, 10]}, dict:new()),
-              ActL = dict:to_list(Act),
-              ?assertMatch([{50, v2}], ActL)
-          end),
-       ?_test(
-          begin
-              {{[],[]}, Act} = fill_percentile(6, v2, {[50],[5]}, dict:new()),
-              ActL = dict:to_list(Act),
-              ?assertMatch([], ActL)
-          end),
-       ?_test(
-          begin
-              L = [{25,19}, {50, 34}, {75, 49}, {90, 58}, {98, 61}],
-              Act = move_percentiles(dict:from_list(L), #acc{}),
-              Exp = #acc{size=0, perc=lists:sort(L)},
-              ?assertMatch(Exp, Act)
+              ?assertMatch(6, get_percentile(10, lists:seq(1, 10), 50))
           end)
       ]},
      {"Collect numbers tests",
