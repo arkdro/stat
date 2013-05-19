@@ -1,6 +1,8 @@
 
-receive gauges {K :: atom(), V :: pos_integer()},
-store them to the appropriate ets (based on K),
+- receive gauges {K :: atom(), V :: pos_integer()},
+  store them to the appropriate ets (based on K)
+- timing (internally the same as gauges)
+- increments
 periodically send statistics for accumulated data and clear ets
 
 gives to output:
