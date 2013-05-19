@@ -158,7 +158,10 @@ ensure_table(Rel, Key) ->
             Tab
     end.
 
-flush_stat(#state{rel=Rel}) ->
+flush_stat(State) ->
+    flush_stat_gauge(State).
+
+flush_stat_gauge(#state{rel=Rel}) ->
     Flusher = spastat_flusher:get_pid(),
     [transfer_one_tab(Flusher, X) || X <- ets:tab2list(Rel)],
     ets:delete_all_objects(Rel).
