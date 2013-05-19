@@ -96,6 +96,10 @@ handle_cast({gauge, K, V}, State) ->
     gauge(State, K, V),
     {noreply, State};
 
+handle_cast({timing, K, Dur}, State) ->
+    gauge(State, K, Dur),
+    {noreply, State};
+
 handle_cast({inc, K}, State) ->
     inc(State, K),
     {noreply, State};
