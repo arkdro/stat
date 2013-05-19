@@ -112,6 +112,10 @@ handle_info({'ETS-TRANSFER', Tab, _FromPid, {flush, Key, Tab}}, State) ->
     spastat_flush_util:flush_tab(Key, Tab),
     {noreply, State};
 
+handle_info({'ETS-TRANSFER', Tab, _FromPid, {flush_inc, Tab}}, State) ->
+    spastat_flush_util:flush_inc_tab(Tab),
+    {noreply, State};
+
 handle_info(_Info, State) ->
     {noreply, State}.
 

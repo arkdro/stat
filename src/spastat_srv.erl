@@ -25,6 +25,7 @@
 -define(INTERVAL, 60 * 1000).
 
 -record(state, {
+          inc, %% ets for incremented keys
           rel %% ets that contains correspondence between tags and ets tables
          }).
 
@@ -59,8 +60,9 @@ start_link() ->
 %%--------------------------------------------------------------------
 init([]) ->
     Rel = ets:new(?MODULE, []),
+    Inc = create_inc_table(),
     erlang:send_after(?INTERVAL, self(), flush),
-    {ok, #state{rel=Rel}}.
+    {ok, #state{rel=Rel, inc=Inc}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -94,6 +96,10 @@ handle_cast({gauge, K, V}, State) ->
     gauge(State, K, V),
     {noreply, State};
 
+handle_cast({inc, K}, State) ->
+    inc(State, K),
+    {noreply, State};
+
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -108,9 +114,9 @@ handle_cast(_Msg, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_info(flush, State) ->
-    flush_stat(State),
+    New = flush_stat(State),
     erlang:send_after(?INTERVAL, self(), flush),
-    {noreply, State};
+    {noreply, New};
 
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -148,6 +154,14 @@ gauge(#state{rel=Rel}, Key, Val) ->
     Tab = ensure_table(Rel, Key),
     ets:insert(Tab, {Val}).
 
+inc(#state{inc=Tab}, Key) ->
+    case ets:lookup(Tab, Key) of
+        [{Key, Val}] ->
+            ets:insert(Tab, {Key, Val + 1});
+        [] ->
+            ets:insert(Tab, {Key, 1})
+    end.
+
 ensure_table(Rel, Key) ->
     case ets:lookup(Rel, Key) of
         [{_, Tab}] ->
@@ -159,7 +173,14 @@ ensure_table(Rel, Key) ->
     end.
 
 flush_stat(State) ->
-    flush_stat_gauge(State).
+    flush_stat_gauge(State),
+    flush_stat_inc(State).
+
+flush_stat_inc(#state{inc=Tab} = State) ->
+    Pid = spastat_flusher:get_pid(),
+    ets:give_away(Tab, Pid, {flush_inc, Tab}),
+    New = create_inc_table(),
+    State#state{inc=New}.
 
 flush_stat_gauge(#state{rel=Rel}) ->
     Flusher = spastat_flusher:get_pid(),
@@ -168,4 +189,7 @@ flush_stat_gauge(#state{rel=Rel}) ->
 
 transfer_one_tab(Pid, {Key, Tab}) ->
     ets:give_away(Tab, Pid, {flush, Key, Tab}).
+
+create_inc_table() ->
+    ets:new(?MODULE, []).
 

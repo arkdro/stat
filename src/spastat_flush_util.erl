@@ -10,6 +10,7 @@
 
 %% API
 -export([
+         flush_inc_tab/1,
          flush_tab/2
         ]).
 
@@ -40,9 +41,29 @@ flush_tab(Key, Tab) ->
     error_logger:info_report({flush_tab, Props}),
     ets:delete(Tab).
 
+-spec flush_inc_tab(atom() | non_neg_integer()) -> true.
+
+flush_inc_tab(Tab) ->
+    case ets:info(Tab, size) of
+        0 ->
+            skip;
+        _ ->
+            flush_inc_tab2(Tab)
+    end,
+    ets:delete(Tab).
+
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+flush_inc_tab2(Tab) ->
+    ets:foldl(fun flush_one_inc_item/2, true, Tab).
+
+flush_one_inc_item({K, V}, Acc) ->
+    Props = [{key, K},
+             {size, V}],
+    error_logger:info_report({flush_inc_tab, Props}),
+    Acc.
 
 create_result(Key, Res) ->
     Tags = record_info(fields, acc),
