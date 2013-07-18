@@ -2,3 +2,4 @@
 - median, percentiles (90 or 95). DONE
 - individual flush timer for every key
 - delete tab after flush and remove it from rel. DONE
+- different sinks: log, file, fun, graphite
