@@ -10,8 +10,8 @@
 
 %% API
 -export([
-         flush_inc_tab/1,
-         flush_tab/2
+         flush_inc_tab/2,
+         flush_tab/3
         ]).
 
 -ifdef(TEST).
@@ -33,22 +33,24 @@
 %%% API
 %%%===================================================================
 
--spec flush_tab(term(), atom() | non_neg_integer()) -> true.
+-spec flush_tab(term(), atom() | non_neg_integer(), [function()]) -> true.
 
-flush_tab(Key, Tab) ->
+flush_tab(Key, Tab, Funs) ->
     Res = get_numbers(Tab),
     Props = create_result(Key, Res),
     error_logger:info_report({flush_tab, Props}),
+    ResFuns = [{Ref, catch X(Props)} || {Ref, X} <- Funs],
+    spastat_srv:funs_status(ResFuns),
     ets:delete(Tab).
 
--spec flush_inc_tab(atom() | non_neg_integer()) -> true.
+-spec flush_inc_tab(atom() | non_neg_integer(), [function()]) -> true.
 
-flush_inc_tab(Tab) ->
+flush_inc_tab(Tab, Funs) ->
     case ets:info(Tab, size) of
         0 ->
             skip;
         _ ->
-            flush_inc_tab2(Tab)
+            flush_inc_tab2(Tab, Funs)
     end,
     ets:delete(Tab).
 
@@ -56,13 +58,18 @@ flush_inc_tab(Tab) ->
 %%% Internal functions
 %%%===================================================================
 
-flush_inc_tab2(Tab) ->
-    ets:foldl(fun flush_one_inc_item/2, true, Tab).
+flush_inc_tab2(Tab, Funs) ->
+    F = fun(X, Acc) ->
+                flush_one_inc_item(X, Acc, Funs)
+        end,
+    ets:foldl(F, true, Tab).
 
-flush_one_inc_item({K, V}, Acc) ->
+flush_one_inc_item({K, V}, Acc, Funs) ->
     Props = [{key, K},
              {size, V}],
     error_logger:info_report({flush_inc_tab, Props}),
+    ResFuns = [{Ref, catch X(Props)} || {Ref, X} <- Funs],
+    spastat_srv:funs_status(ResFuns),
     Acc.
 
 create_result(Key, Res) ->

@@ -14,6 +14,7 @@
 
 %% API
 -export([
+         funs_status/1,
          start_link/0
         ]).
 
@@ -25,6 +26,8 @@
 -define(INTERVAL, 60 * 1000).
 
 -record(state, {
+          %% list of funs to be called on flush
+          funs = [] :: [{reference(), function()}],
           inc, %% ets for incremented keys
           rel %% ets that contains correspondence between tags and ets tables
          }).
@@ -42,6 +45,9 @@
 %%--------------------------------------------------------------------
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+funs_status(L) ->
+    gen_server:cast(?SERVER, {funs_status, L}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -92,6 +98,16 @@ handle_call(_Request, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_cast({add_fun, F, Ref}, #state{funs=L} = State) ->
+    New = State#state{funs = [{Ref, F} | L]},
+    {noreply, New};
+
+handle_cast({funs_status, L}, #state{funs=Funs} = State) ->
+    OkRefs = [Ref || {Ref, ok} <- L],
+    S = sets:from_list(OkRefs),
+    NewFuns = [X || {Ref, _} = X <- Funs, sets:is_element(Ref, S)],
+    {noreply, State#state{funs=NewFuns}};
+
 handle_cast({gauge, K, V}, State) ->
     gauge(State, K, V),
     {noreply, State};
@@ -180,19 +196,19 @@ flush_stat(State) ->
     flush_stat_gauge(State),
     flush_stat_inc(State).
 
-flush_stat_inc(#state{inc=Tab} = State) ->
+flush_stat_inc(#state{inc=Tab, funs=Funs} = State) ->
     Pid = spastat_flusher:get_pid(),
-    ets:give_away(Tab, Pid, {flush_inc, Tab}),
+    ets:give_away(Tab, Pid, {flush_inc, Tab, Funs}),
     New = create_inc_table(),
     State#state{inc=New}.
 
-flush_stat_gauge(#state{rel=Rel}) ->
+flush_stat_gauge(#state{rel=Rel, funs=Funs}) ->
     Flusher = spastat_flusher:get_pid(),
-    [transfer_one_tab(Flusher, X) || X <- ets:tab2list(Rel)],
+    [transfer_one_tab(Flusher, X, Funs) || X <- ets:tab2list(Rel)],
     ets:delete_all_objects(Rel).
 
-transfer_one_tab(Pid, {Key, Tab}) ->
-    ets:give_away(Tab, Pid, {flush, Key, Tab}).
+transfer_one_tab(Pid, {Key, Tab}, Funs) ->
+    ets:give_away(Tab, Pid, {flush, Key, Tab, Funs}).
 
 create_inc_table() ->
     ets:new(?MODULE, []).
