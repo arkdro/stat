@@ -3,6 +3,7 @@
 %% API for spastat_srv
 -export([
          add_fun/1,
+         del_fun/1,
          inc/1, %% k
          timing/2, %% k, T1
          gauge/2
@@ -15,6 +16,9 @@ add_fun(F) ->
     Ref = make_ref(),
     gen_server:cast(?SERVER, {add_fun, F, Ref}),
     Ref.
+
+del_fun(Ref) ->
+    gen_server:cast(?SERVER, {del_fun, Ref}).
 
 gauge(K, V) ->
     gen_server:cast(?SERVER, {gauge, K, V}).

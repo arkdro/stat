@@ -102,6 +102,10 @@ handle_cast({add_fun, F, Ref}, #state{funs=L} = State) ->
     New = State#state{funs = [{Ref, F} | L]},
     {noreply, New};
 
+handle_cast({del_fun, Ref}, #state{funs=L} = State) ->
+    NewFuns = [X || {R, _}=X <- L, R /= Ref],
+    {noreply, State#state{funs=NewFuns}};
+
 handle_cast({funs_status, L}, #state{funs=Funs} = State) ->
     OkRefs = [Ref || {Ref, ok} <- L],
     S = sets:from_list(OkRefs),
