@@ -3,8 +3,31 @@
   store them to the appropriate ets (based on K)
 - timing (internally the same as gauges)
 - increments
-periodically send statistics for accumulated data and clear ets
 
-gives to output:
+periodically send aggregated statistics somewhere
+
+output data:
 - percentiles: 25, 50, 75, 90, 98
 - min, max, avg, sum, size
+
+You can pass own fun to be called every minute for every key of aggregated data.
+The fun must return 'ok' on success, otherwise it will be removed from the
+storage and won't be called later.
+
+Examples
+========
+
+1)
+- accumulate counters with 'cache_miss' key,
+- accumulate timing with larger key
+...
+T1 = os:timestamp(),
+ask_some_cache(Id),
+spastat:inc(cache_miss),
+spastat:timing({some_server, get_one_item, slow_match}, T1).
+...
+
+Aggregated data:
+[{key,{some_server, get_one_item, slow_match}},{size,7},{sum,38960904},{min,1795796},{max,9879067},{avg,5565843.428571428},{perc,[{25,2143187},{50,6425125},{75,7726767},{90,9879067},{98,9879067}]}]
+[{key,cache_miss},{size,7}]
+
