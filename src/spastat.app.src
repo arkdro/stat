@@ -1,6 +1,6 @@
 {application, spastat,
  [{description, "Small simple stat server"},
-  {vsn, "0.0.3"},
+  {vsn, "0.0.4"},
   {modules, []},
   {registered, [spastat_srv, spastat_flusher]},
   {applications, [kernel,
